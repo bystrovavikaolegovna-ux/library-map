@@ -62,7 +62,6 @@
             height: 100%;
             pointer-events: none;
         }
-        /* Метки-точки (круглые, без картинок) */
         .marker-dot {
             position: absolute;
             width: 50px;
@@ -118,7 +117,6 @@
             background-repeat: no-repeat;
         }
 
-        /* Видео-модальное окно (поверх карты, но поверх рамки) */
         #video-modal {
             position: absolute;
             top: 0;
@@ -126,7 +124,7 @@
             width: 100%;
             height: 100%;
             display: none;
-            z-index: 30;
+            z-index: 40;
             background: rgba(0,0,0,0.7);
             justify-content: center;
             align-items: center;
@@ -192,6 +190,43 @@
             background: rgba(255,215,0,0.8);
             color: #1a1a1a;
         }
+
+        /* Кнопки перемещения — в левом нижнем углу */
+        .move-controls {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            grid-template-rows: 1fr 1fr 1fr;
+            gap: 4px;
+            z-index: 30;
+            pointer-events: none;
+        }
+        .move-controls button {
+            pointer-events: auto;
+            width: 34px;
+            height: 34px;
+            border: none;
+            border-radius: 8px;
+            background: rgba(0,0,0,0.6);
+            color: white;
+            font-size: 14px;
+            cursor: pointer;
+            backdrop-filter: blur(4px);
+            transition: background 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .move-controls button:hover {
+            background: rgba(255,215,0,0.8);
+            color: #1a1a1a;
+        }
+        .move-controls .empty {
+            visibility: hidden;
+        }
+
         .zoom-indicator {
             position: absolute;
             top: 20px;
@@ -206,7 +241,6 @@
             backdrop-filter: blur(4px);
         }
 
-        /* Боковая панель с произведениями */
         .sidebar {
             flex: 1;
             background: rgba(44, 44, 44, 0.9);
@@ -288,7 +322,6 @@
     <div class="main-wrapper">
         <div class="map-container">
             <div class="container" id="container">
-                <!-- Видео-модальное окно -->
                 <div id="video-modal">
                     <div class="video-wrapper">
                         <button class="close-btn" id="closeVideo">✕</button>
@@ -299,8 +332,6 @@
                 <div class="inner-viewport" id="innerViewport">
                     <div class="viewport" id="viewport">
                         <img id="image" src="kartamilayzm.jpg" alt="Карта">
-
-                        <!-- МЕТКИ-ТОЧКИ (примерные позиции – вы потом их поправите) -->
                         <div class="marker-dot" data-video="fototyr1.mp4" style="left:30%; top:40%;">
                             <span class="label">Кинотеатр «Экран»</span>
                         </div>
@@ -328,11 +359,24 @@
                         <div class="marker-dot" data-video="fototyr9.mp4" style="left:70%; top:90%;">
                             <span class="label">Видео 3</span>
                         </div>
-                        <!-- Добавьте остальные точки по необходимости -->
                     </div>
                 </div>
                 <div class="frame-overlay"></div>
                 <div class="zoom-indicator" id="zoomIndicator">100%</div>
+
+                <!-- Кнопки перемещения — в левом нижнем углу -->
+                <div class="move-controls">
+                    <button class="empty"></button>
+                    <button id="moveUp">▲</button>
+                    <button class="empty"></button>
+                    <button id="moveLeft">◀</button>
+                    <button class="empty"></button>
+                    <button id="moveRight">▶</button>
+                    <button class="empty"></button>
+                    <button id="moveDown">▼</button>
+                    <button class="empty"></button>
+                </div>
+
                 <div class="controls">
                     <button id="zoomIn">➕</button>
                     <button id="zoomOut">➖</button>
@@ -341,7 +385,6 @@
             </div>
         </div>
 
-        <!-- Боковая панель с произведениями -->
         <div class="sidebar">
             <h2>Произведения В.П. Туркина</h2>
             <div class="poem-list">
@@ -376,7 +419,6 @@
 
     <script>
         (function() {
-            // ---------- Основная логика карты ----------
             const container = document.getElementById('container');
             const viewport = document.getElementById('viewport');
             const image = document.getElementById('image');
@@ -388,6 +430,7 @@
             const minScale = 0.9;
             const maxScale = 4;
             const step = 0.1;
+            const moveStep = 50;
 
             let isDragging = false;
             let startX, startY;
@@ -413,7 +456,7 @@
             }
 
             container.addEventListener('mousedown', function(e) {
-                if (e.target.closest('.marker-dot') || e.target.closest('.controls') || e.target.closest('.zoom-indicator') || e.target.closest('#video-modal')) return;
+                if (e.target.closest('.marker-dot') || e.target.closest('.controls') || e.target.closest('.zoom-indicator') || e.target.closest('#video-modal') || e.target.closest('.move-controls')) return;
                 isDragging = true;
                 startX = e.clientX;
                 startY = e.clientY;
@@ -490,26 +533,38 @@
                 centerImage();
             });
 
+            document.getElementById('moveUp').addEventListener('click', function() {
+                translateY -= moveStep;
+                updateTransform();
+            });
+            document.getElementById('moveDown').addEventListener('click', function() {
+                translateY += moveStep;
+                updateTransform();
+            });
+            document.getElementById('moveLeft').addEventListener('click', function() {
+                translateX -= moveStep;
+                updateTransform();
+            });
+            document.getElementById('moveRight').addEventListener('click', function() {
+                translateX += moveStep;
+                updateTransform();
+            });
+
             container.style.cursor = 'grab';
 
-            // ---------- АУДИО-ПЛЕЕР ----------
+            // АУДИО
             const audio = new Audio();
             let currentAudioItem = null;
-
             const poemItems = document.querySelectorAll('.poem-item');
             poemItems.forEach(item => {
                 item.addEventListener('click', function() {
                     const audioSrc = this.getAttribute('data-audio');
                     if (!audioSrc) return;
-
-                    // Если это же произведение уже играет, ставим на паузу
                     if (currentAudioItem === this && !audio.paused) {
                         audio.pause();
                         this.querySelector('.status').textContent = '⏸';
                         return;
                     }
-
-                    // Если другое произведение играет или на паузе, останавливаем и переключаем
                     if (currentAudioItem) {
                         currentAudioItem.querySelector('.status').textContent = '';
                         currentAudioItem.classList.remove('active');
@@ -523,8 +578,6 @@
                     this.classList.add('active');
                 });
             });
-
-            // При окончании аудио сбрасываем статус
             audio.addEventListener('ended', function() {
                 if (currentAudioItem) {
                     currentAudioItem.querySelector('.status').textContent = '';
@@ -533,7 +586,7 @@
                 }
             });
 
-            // ---------- ВИДЕО-МОДАЛЬНОЕ ОКНО ----------
+            // ВИДЕО
             const videoModal = document.getElementById('video-modal');
             const videoPlayer = document.getElementById('video-player');
             const closeVideoBtn = document.getElementById('closeVideo');
@@ -542,7 +595,6 @@
                 videoPlayer.src = videoSrc;
                 videoPlayer.load();
                 videoModal.classList.add('active');
-                // Видео без звука, чтобы не мешать аудио
                 videoPlayer.muted = true;
                 videoPlayer.play();
             }
@@ -554,24 +606,17 @@
             }
 
             closeVideoBtn.addEventListener('click', closeVideo);
-            // Закрытие по клику на фон (на сам модальный блок, но не на видео)
             videoModal.addEventListener('click', function(e) {
-                if (e.target === this) {
-                    closeVideo();
-                }
+                if (e.target === this) closeVideo();
             });
 
-            // Обработка кликов по меткам-точкам
             const dots = document.querySelectorAll('.marker-dot');
             dots.forEach(dot => {
                 dot.addEventListener('click', function(e) {
                     e.stopPropagation();
                     const videoSrc = this.getAttribute('data-video');
-                    if (videoSrc) {
-                        openVideo(videoSrc);
-                    }
+                    if (videoSrc) openVideo(videoSrc);
                 });
-                // Подсветка при наведении (активный класс)
                 dot.addEventListener('mouseenter', function() {
                     this.classList.add('active');
                 });
@@ -579,9 +624,6 @@
                     this.classList.remove('active');
                 });
             });
-
-            // При открытии видео не останавливаем аудио
-            // (видео без звука, поэтому просто воспроизводится)
         })();
     </script>
 </body>
