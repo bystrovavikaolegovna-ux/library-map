@@ -91,7 +91,6 @@
             pointer-events: none;
         }
 
-        /* Рамка теперь вне viewport и не масштабируется */
         .frame-overlay {
             position: absolute;
             top: 0;
@@ -127,7 +126,6 @@
             object-fit: contain;
         }
 
-        /* Кнопки управления масштабом */
         .controls {
             position: absolute;
             bottom: 20px;
@@ -156,32 +154,30 @@
             color: #1a1a1a;
         }
 
-        /* Кнопки перемещения (стрелки) */
+        /* Кнопки перемещения — уменьшены и в левом нижнем углу */
         .move-controls {
             position: absolute;
-            bottom: 80px;
-            left: 50%;
-            transform: translateX(-50%);
+            bottom: 20px;
+            left: 20px;
             display: grid;
             grid-template-columns: 1fr 1fr 1fr;
             grid-template-rows: 1fr 1fr 1fr;
-            gap: 6px;
+            gap: 4px;
             z-index: 30;
             pointer-events: none;
         }
         .move-controls button {
             pointer-events: auto;
-            width: 50px;
-            height: 50px;
+            width: 34px;
+            height: 34px;
             border: none;
-            border-radius: 12px;
-            background: rgba(0,0,0,0.7);
+            border-radius: 8px;
+            background: rgba(0,0,0,0.6);
             color: white;
-            font-size: 22px;
+            font-size: 14px;
             cursor: pointer;
             backdrop-filter: blur(4px);
             transition: background 0.2s;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.3);
             display: flex;
             align-items: center;
             justify-content: center;
@@ -283,6 +279,7 @@
 
                 <div class="inner-viewport" id="innerViewport">
                     <div class="viewport" id="viewport">
+                        <!-- Карта теперь в JPG -->
                         <img id="image" src="kartamilay.jpg" alt="Карта">
                         <!-- Метки -->
                         <a href="#" class="marker" data-pisatel="1" data-link="pisatel1.html" style="left:54.83%; top:64.46%;">
@@ -306,12 +303,11 @@
                     </div>
                 </div>
 
-                <!-- Рамка теперь вне viewport, не масштабируется -->
                 <div class="frame-overlay"></div>
 
                 <div class="zoom-indicator" id="zoomIndicator">100%</div>
 
-                <!-- Кнопки перемещения -->
+                <!-- Кнопки перемещения — в левом нижнем углу, меньше размером -->
                 <div class="move-controls">
                     <button class="empty"></button>
                     <button id="moveUp">▲</button>
@@ -324,7 +320,6 @@
                     <button class="empty"></button>
                 </div>
 
-                <!-- Кнопки масштаба -->
                 <div class="controls">
                     <button id="zoomIn">➕</button>
                     <button id="zoomOut">➖</button>
@@ -377,7 +372,7 @@
             const minScale = 0.9;
             const maxScale = 4;
             const step = 0.1;
-            const moveStep = 50; // шаг перемещения кнопками (пикселей)
+            const moveStep = 50;
 
             let isDragging = false;
             let startX, startY;
@@ -480,7 +475,6 @@
                 centerImage();
             });
 
-            // Кнопки перемещения
             document.getElementById('moveUp').addEventListener('click', function() {
                 translateY -= moveStep;
                 updateTransform();
@@ -542,27 +536,18 @@
                 });
             });
 
-            // ---------- Клик для открытия ссылки в новой вкладке ----------
-            function openLink(link) {
-                if (link && link !== '#') {
-                    window.open(link, '_blank');
-                }
-            }
-
+            // ---------- Клик для открытия ссылки в новой вкладке — только по карточкам ----------
             cards.forEach(card => {
                 card.addEventListener('click', function(e) {
                     const link = this.getAttribute('data-link');
-                    openLink(link);
+                    if (link && link !== '#') {
+                        window.open(link, '_blank');
+                    }
                 });
             });
 
-            markers.forEach(marker => {
-                marker.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    const link = this.getAttribute('data-link');
-                    openLink(link);
-                });
-            });
+            // Клик по метке больше НЕ открывает ссылку
+            // (только показывает панель, которая уже появляется при наведении)
         })();
     </script>
 </body>
