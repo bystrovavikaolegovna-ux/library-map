@@ -90,6 +90,8 @@
             border-radius: 0;
             pointer-events: none;
         }
+
+        /* Рамка теперь вне viewport и не масштабируется */
         .frame-overlay {
             position: absolute;
             top: 0;
@@ -102,6 +104,7 @@
             background-size: 100% 100%;
             background-repeat: no-repeat;
         }
+
         #info-panel {
             position: absolute;
             left: 15.36%;
@@ -123,6 +126,8 @@
             height: 100%;
             object-fit: contain;
         }
+
+        /* Кнопки управления масштабом */
         .controls {
             position: absolute;
             bottom: 20px;
@@ -150,6 +155,45 @@
             background: rgba(255,215,0,0.8);
             color: #1a1a1a;
         }
+
+        /* Кнопки перемещения (стрелки) */
+        .move-controls {
+            position: absolute;
+            bottom: 80px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            grid-template-rows: 1fr 1fr 1fr;
+            gap: 6px;
+            z-index: 30;
+            pointer-events: none;
+        }
+        .move-controls button {
+            pointer-events: auto;
+            width: 50px;
+            height: 50px;
+            border: none;
+            border-radius: 12px;
+            background: rgba(0,0,0,0.7);
+            color: white;
+            font-size: 22px;
+            cursor: pointer;
+            backdrop-filter: blur(4px);
+            transition: background 0.2s;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .move-controls button:hover {
+            background: rgba(255,215,0,0.8);
+            color: #1a1a1a;
+        }
+        .move-controls .empty {
+            visibility: hidden;
+        }
+
         .zoom-indicator {
             position: absolute;
             top: 20px;
@@ -207,7 +251,7 @@
             padding: 12px 16px;
             margin-bottom: 12px;
             transition: background 0.15s;
-            cursor: pointer; /* меняем курсор, чтобы было видно, что кликабельно */
+            cursor: pointer;
         }
         .writer-card:hover {
             background: rgba(255,215,0,0.1);
@@ -239,21 +283,21 @@
 
                 <div class="inner-viewport" id="innerViewport">
                     <div class="viewport" id="viewport">
-                        <img id="image" src="kartamilay.jpg" alt="Карта">
-                        <!-- Метки с атрибутами data-link -->
-                        <a href="#" class="marker" data-pisatel="1" data-link="https://example.com/pisatel1" style="left:54.83%; top:64.46%;">
+                        <img id="image" src="kartamilay.png" alt="Карта">
+                        <!-- Метки -->
+                        <a href="#" class="marker" data-pisatel="1" data-link="pisatel1.html" style="left:54.83%; top:64.46%;">
                             <img src="marker1.png" alt="Метка 1">
                         </a>
-                        <a href="#" class="marker" data-pisatel="2" data-link="https://example.com/pisatel2" style="left:41.70%; top:38.09%;">
+                        <a href="#" class="marker" data-pisatel="2" data-link="pisatel2.html" style="left:41.70%; top:38.09%;">
                             <img src="marker2.png" alt="Метка 2">
                         </a>
-                        <a href="#" class="marker" data-pisatel="3" data-link="https://example.com/pisatel3" style="left:46.96%; top:57.77%;">
+                        <a href="#" class="marker" data-pisatel="3" data-link="pisatel3.html" style="left:46.96%; top:57.77%;">
                             <img src="marker3.png" alt="Метка 3">
                         </a>
-                        <a href="#" class="marker" data-pisatel="4" data-link="https://example.com/pisatel4" style="left:74.06%; top:67.94%;">
+                        <a href="#" class="marker" data-pisatel="4" data-link="pisatel4.html" style="left:74.06%; top:67.94%;">
                             <img src="marker4.png" alt="Метка 4">
                         </a>
-                        <a href="#" class="marker" data-pisatel="5" data-link="https://example.com/pisatel5" style="left:29.63%; top:67.29%;">
+                        <a href="#" class="marker" data-pisatel="5" data-link="pisatel5.html" style="left:29.63%; top:67.29%;">
                             <img src="marker5.png" alt="Метка 5">
                         </a>
                         <a href="#" class="marker" data-pisatel="6" data-link="pisatel6.html" style="left:57.84%; top:64.48%;">
@@ -261,8 +305,26 @@
                         </a>
                     </div>
                 </div>
+
+                <!-- Рамка теперь вне viewport, не масштабируется -->
                 <div class="frame-overlay"></div>
+
                 <div class="zoom-indicator" id="zoomIndicator">100%</div>
+
+                <!-- Кнопки перемещения -->
+                <div class="move-controls">
+                    <button class="empty"></button>
+                    <button id="moveUp">▲</button>
+                    <button class="empty"></button>
+                    <button id="moveLeft">◀</button>
+                    <button class="empty"></button>
+                    <button id="moveRight">▶</button>
+                    <button class="empty"></button>
+                    <button id="moveDown">▼</button>
+                    <button class="empty"></button>
+                </div>
+
+                <!-- Кнопки масштаба -->
                 <div class="controls">
                     <button id="zoomIn">➕</button>
                     <button id="zoomOut">➖</button>
@@ -274,23 +336,23 @@
         <div class="sidebar">
             <h2>Писатели на карте</h2>
             <div class="card-list">
-                <div class="writer-card" data-target="1" data-link="https://example.com/pisatel1">
+                <div class="writer-card" data-target="1" data-link="pisatel1.html">
                     <div class="name">1. Герасин Виктор Иванович</div>
                     <div class="desc">Родился в 1939 году в поселке Земетчино</div>
                 </div>
-                <div class="writer-card" data-target="2" data-link="https://example.com/pisatel2">
+                <div class="writer-card" data-target="2" data-link="pisatel2.html">
                     <div class="name">2. Ивленкова Валентина Николаевна</div>
                     <div class="desc">Родилась в 1936 году в городе Ленинграде</div>
                 </div>
-                <div class="writer-card" data-target="3" data-link="https://example.com/pisatel3">
+                <div class="writer-card" data-target="3" data-link="pisatel3.html">
                     <div class="name">3. Клюева (Белякова) Надежда Викторовна</div>
                     <div class="desc">Родилась в 1984 году в селе Оторма</div>
                 </div>
-                <div class="writer-card" data-target="4" data-link="https://example.com/pisatel4">
+                <div class="writer-card" data-target="4" data-link="pisatel4.html">
                     <div class="name">4. Купцов Виктор Яковлевич</div>
                     <div class="desc">Родился в 1948 году в селе Ушинка</div>
                 </div>
-                <div class="writer-card" data-target="5" data-link="https://example.com/pisatel5">
+                <div class="writer-card" data-target="5" data-link="pisatel5.html">
                     <div class="name">5. Комбатов (Лобачев) Александр Евгеньевич</div>
                     <div class="desc">Родился в 1959 году в селе Лесное</div>
                 </div>
@@ -304,7 +366,6 @@
 
     <script>
         (function() {
-            // ---------- Основная логика карты ----------
             const container = document.getElementById('container');
             const viewport = document.getElementById('viewport');
             const image = document.getElementById('image');
@@ -316,6 +377,7 @@
             const minScale = 0.9;
             const maxScale = 4;
             const step = 0.1;
+            const moveStep = 50; // шаг перемещения кнопками (пикселей)
 
             let isDragging = false;
             let startX, startY;
@@ -341,7 +403,7 @@
             }
 
             container.addEventListener('mousedown', function(e) {
-                if (e.target.closest('.marker') || e.target.closest('.controls') || e.target.closest('.zoom-indicator')) return;
+                if (e.target.closest('.marker') || e.target.closest('.controls') || e.target.closest('.zoom-indicator') || e.target.closest('.move-controls')) return;
                 isDragging = true;
                 startX = e.clientX;
                 startY = e.clientY;
@@ -418,9 +480,27 @@
                 centerImage();
             });
 
+            // Кнопки перемещения
+            document.getElementById('moveUp').addEventListener('click', function() {
+                translateY -= moveStep;
+                updateTransform();
+            });
+            document.getElementById('moveDown').addEventListener('click', function() {
+                translateY += moveStep;
+                updateTransform();
+            });
+            document.getElementById('moveLeft').addEventListener('click', function() {
+                translateX -= moveStep;
+                updateTransform();
+            });
+            document.getElementById('moveRight').addEventListener('click', function() {
+                translateX += moveStep;
+                updateTransform();
+            });
+
             container.style.cursor = 'grab';
 
-            // ---------- Логика подсветки меток и показа панели (hover) ----------
+            // ---------- Логика подсветки меток и показа панели ----------
             const infoPanel = document.getElementById('info-panel');
             const infoImage = document.getElementById('info-image');
             const markers = document.querySelectorAll('.marker');
@@ -462,14 +542,13 @@
                 });
             });
 
-            // ---------- НОВАЯ ЛОГИКА: клик для открытия ссылки в новой вкладке ----------
+            // ---------- Клик для открытия ссылки в новой вкладке ----------
             function openLink(link) {
                 if (link && link !== '#') {
                     window.open(link, '_blank');
                 }
             }
 
-            // Клик на карточку
             cards.forEach(card => {
                 card.addEventListener('click', function(e) {
                     const link = this.getAttribute('data-link');
@@ -477,10 +556,9 @@
                 });
             });
 
-            // Клик на метку
             markers.forEach(marker => {
                 marker.addEventListener('click', function(e) {
-                    e.preventDefault(); // чтобы не было перехода по пустой ссылке
+                    e.preventDefault();
                     const link = this.getAttribute('data-link');
                     openLink(link);
                 });
